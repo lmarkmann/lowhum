@@ -7,13 +7,13 @@ from scipy.io.wavfile import write as wav_write
 from scipy.signal import butter, sosfilt
 
 SAMPLE_RATE = 44_100
-DURATION = 3600  # seconds (1 hour)
+DURATION = 600  # seconds (10 minutes)
 DATA_DIR = Path.home() / ".lowhum"
-AUDIO_FILE = DATA_DIR / "deep_brown_noise_1hr.wav"
+AUDIO_FILE = DATA_DIR / "deep_brown_noise_10m.wav"
 
 
 def generate_brown_noise(output_path: Path | None = None) -> Path:
-    """Generate 1 hour of deep brown noise and save as WAV.
+    """Generate 10 minutes of deep brown noise and save as WAV.
 
     Uses cumulative-sum brown noise with Butterworth bandpass (1–500 Hz)
     and a sub-bass high-pass at 20 Hz. Chunks are crossfaded to avoid clicks.
@@ -70,5 +70,5 @@ def ensure_audio() -> Path:
     if AUDIO_FILE.exists():
         return AUDIO_FILE
 
-    print("Generating brown noise audio (first run — takes ~30 s) …")
+    print("Generating brown noise audio (first run — takes ~5 s) …")
     return generate_brown_noise()

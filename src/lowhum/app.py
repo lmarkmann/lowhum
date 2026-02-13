@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import rumps
 import sounddevice as sd
 
@@ -9,13 +11,29 @@ from .audio import AudioPlayer, list_output_devices
 from .generator import AUDIO_FILE
 from .icons import ensure_template_icon
 
+_APP_ICON = Path(__file__).parent / "icon.png"
+
+
+def _set_dock_icon() -> None:
+    """Set the macOS dock icon if icon.png is bundled."""
+    if not _APP_ICON.exists():
+        return
+    try:
+        from AppKit import NSApplication, NSImage  # type: ignore[import-untyped]
+
+        ns_image = NSImage.alloc().initByReferencingFile_(str(_APP_ICON))
+        NSApplication.sharedApplication().setApplicationIconImage_(ns_image)
+    except ImportError:
+        pass
+
 
 class LowHumApp(rumps.App):
     """Menu-bar app: play / stop / select output device."""
 
     def __init__(self) -> None:
         icon_path = str(ensure_template_icon())
-        super().__init__("LowHum", icon=icon_path, template=True, quit_button=None)
+        super().__init__("LowHum", icon=icon_path, template=True, quit_button=None)  # type: ignore
+        _set_dock_icon()
 
         self._player = AudioPlayer()
         self._selected_device: int | None = None

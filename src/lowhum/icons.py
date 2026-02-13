@@ -35,7 +35,7 @@ def ensure_template_icon() -> Path:
         img = Image.open(_SOURCE_ICON_LIGHT).convert("RGBA")
     else:
         raise FileNotFoundError(f"Neither {_SOURCE_ICON_DARK} nor {_SOURCE_ICON_LIGHT} found")
-    img = img.resize((_ICON_SIZE, _ICON_SIZE), Image.LANCZOS)
+    img = img.resize((_ICON_SIZE, _ICON_SIZE), Image.LANCZOS)  # type: ignore
 
     pixels = np.array(img)
 
