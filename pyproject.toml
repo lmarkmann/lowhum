@@ -1,0 +1,43 @@
+[project]
+name = "lowhum"
+version = "1.0.0"
+description = "Deep Brown Noise for Focus as a MenuBar App & CLI Tool"
+readme = "README.md"
+license = "MIT"
+authors = [{ name = "Luis Markmann" }]
+requires-python = ">=3.12"
+keywords = ["brown-noise", "focus", "audio", "macos", "menu-bar"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: MacOS X",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: MacOS",
+    "Programming Language :: Python :: 3",
+    "Topic :: Multimedia :: Sound/Audio",
+]
+dependencies = [
+    "numpy>=2.0",
+    "pillow>=11.0",
+    "rumps>=0.4.0",
+    "scipy>=1.14",
+    "sounddevice>=0.5",
+    "typer>=0.12",
+]
+
+[project.scripts]
+lowhum = "lowhum.cli:app"
+lhm = "lowhum.cli:app"
+
+[project.urls]
+Repository = "https://github.com/lmarkmann/lowhum"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/lowhum"]
+
+[dependency-groups]
+dev = ["ruff>=0.9"]

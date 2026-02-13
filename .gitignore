@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+*.egg
+dist/
+build/
+
+# Audio (generated at runtime)
+*.wav
+
+# IDE / OS
+.DS_Store
+.venv/
+.ruff_cache/
+
+# uv
+uv.lock
+CLAUDE.md
