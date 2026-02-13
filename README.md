@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="src/lowhum/icon.png" alt="LowHum icon" width="128">
+</p>
+
 # LowHum
 
 **Deep brown noise for focus, right from the macOS menu bar.**
