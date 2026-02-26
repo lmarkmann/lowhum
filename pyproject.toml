@@ -1,6 +1,6 @@
 [project]
 name = "lowhum"
-version = "1.0.1"
+version = "0.1.1"
 description = "Deep Brown Noise for Focus as a MenuBar App & CLI Tool"
 readme = "README.md"
 license = "MIT"
@@ -39,6 +39,9 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.wheel]
 packages = ["src/lowhum"]
 exclude = ["*.wav"]
+
+[tool.ruff]
+line-length = 80
 
 [dependency-groups]
 dev = ["ruff>=0.9"]
