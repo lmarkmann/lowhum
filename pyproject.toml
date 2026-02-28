@@ -1,6 +1,6 @@
 [project]
 name = "lowhum"
-version = "1.1.0"
+version = "1.1.1"
 description = "Deep Brown Noise for Focus as a MenuBar App & CLI Tool"
 readme = "README.md"
 license = "MIT"

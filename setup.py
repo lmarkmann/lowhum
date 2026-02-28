@@ -27,8 +27,8 @@ OPTIONS = {
     "plist": {
         "CFBundleName": "LowHum",
         "CFBundleIdentifier": "com.lowhum.app",
-        "CFBundleVersion": "1.1.0",
-        "CFBundleShortVersionString": "1.1.0",
+        "CFBundleVersion": "1.1.1",
+        "CFBundleShortVersionString": "1.1.1",
         "LSUIElement": True,
     },
     "packages": [
