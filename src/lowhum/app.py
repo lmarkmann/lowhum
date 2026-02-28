@@ -131,7 +131,9 @@ class LowHumApp(rumps.App):
         self._player.volume = self._volume
 
         # Build static menu items
-        self._play_pause_item = rumps.MenuItem("Play", callback=self._on_play_pause)
+        self._play_pause_item = rumps.MenuItem(
+            "Play", callback=self._on_play_pause
+        )
         self._stop_item = rumps.MenuItem("Stop", callback=self._on_stop)
         self._volume_menu = rumps.MenuItem(self._volume_label())
         self._color_menu = rumps.MenuItem("Noise Color")

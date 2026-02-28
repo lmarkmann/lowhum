@@ -83,15 +83,29 @@ def devices() -> None:
 
 
 @app.command()
-def generate() -> None:
-    """Pre-generate the brown noise audio file."""
-    from .generator import AUDIO_FILE, generate_brown_noise
+def generate(
+    color: str = typer.Option(
+        "brown", "--color", "-c", help="brown, pink, or white"
+    ),
+    duration: int = typer.Option(
+        600, "--duration", "-d", help="Duration in seconds"
+    ),
+) -> None:
+    """Pre-generate a noise audio file."""
+    from .generator import NoiseColor, audio_file, generate_noise
+
+    try:
+        noise_color = NoiseColor(color)
+    except ValueError:
+        typer.echo(f"  Unknown color '{color}'. Choose: brown, pink, white.")
+        raise typer.Exit(1) from None
 
     _banner()
-    if AUDIO_FILE.exists():
-        typer.echo(f"  Audio file already exists at {AUDIO_FILE}")
+    path = audio_file(noise_color)
+    if path.exists():
+        typer.echo(f"  Audio file already exists at {path}")
         if not typer.confirm("  Regenerate?"):
             raise typer.Abort()
 
-    generate_brown_noise()
-    typer.echo(f"  Saved to {AUDIO_FILE}")
+    generate_noise(noise_color, duration=duration)
+    typer.echo(f"  Saved to {path}")
