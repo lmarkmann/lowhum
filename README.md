@@ -1,23 +1,35 @@
-<p align="center">
-  <img src="src/lowhum/icon.png" alt="LowHum icon" width="128">
-</p>
+```
+               _.-````'-,_
+     _,.,_ ,-'           `'-.,_
+   /)     (\                   '`-.
+  ((      ) )                      `\
+   \)    (_/                        )\
+    |       /)           '    ,'    / \
+    `\    ^'            '     (    /  ))
+      |      _/\ ,     /    ,,`\   (  "`
+       \Y,   |  \  \  | ``````| / \_ \
+         `)_/    \  \  )    ( >  ( >
+                  \( \(     |/   |/
+                 /_(/_(    /_(  /_(
+```
 
 # LowHum
 
-**Deep brown noise for focus, right from the macOS menu bar.**
+[![PyPI](https://img.shields.io/pypi/v/lowhum)](https://pypi.org/project/lowhum/)
+[![Python](https://img.shields.io/pypi/pyversions/lowhum)](https://pypi.org/project/lowhum/)
+[![License](https://img.shields.io/github/license/lmarkmann/lowhum)](LICENSE)
+[![Downloads](https://img.shields.io/pypi/dm/lowhum)](https://pypi.org/project/lowhum/)
 
-No browser tabs. No subscriptions. No account. Fully offline.
+Deep brown noise for focus, right from the macOS menu bar. Requires macOS and Python 3.12+.
 
-<!-- TODO: Add GIF demo here -->
-
-Brown noise is one of the most effective focus aids for people with ADHD and anyone who needs to block out distractions. Most options require keeping a YouTube tab open, paying for a subscription app, or relying on your phone. LowHum is a single-purpose menu bar app that generates deep brown noise locally and plays it on loop — install it, click play, forget about it.
+Brown noise is one of the most effective focus aids for people with ADHD and anyone who needs to block out distractions. Most options require keeping a YouTube tab open, paying for a subscription, or relying on your phone. LowHum is a single-purpose menu bar app that generates deep brown noise locally and plays it on loop. Install it, click play, forget about it.
 
 ## Install
 
 ```bash
-uv tool install lowhum          # recommended
+uv tool install -U lowhum
 # or
-pip install lowhum
+pip install -U lowhum
 ```
 
 ## Usage
@@ -28,25 +40,23 @@ lowhum devices                  # list output devices
 lowhum generate                 # pre-generate the audio file
 ```
 
-`lhm` is a shorthand alias — all commands work with either name.
+`lhm` is a shorthand alias for all commands.
 
-### Menu-bar app
+### Menu bar controls
 
 - Play / Stop from the menu bar
-- **Output Device** submenu — pick any connected audio device
+- Pick any connected audio device from the Output Device submenu
+- Binaural beats overlay (Theta, Alpha, Beta, Gamma)
+- Noise color selection (brown, pink, white)
 - Auto-stops when headphones connect or disconnect
 
 ## How it works
 
-1. **Generation** — On first run, a 10-minute WAV is synthesised locally: cumulative-sum brown noise, Butterworth bandpass (1–500 Hz + 20 Hz sub-bass HP), RMS-normalised per chunk, crossfaded at boundaries. Stored at `~/.lowhum/`.
-2. **Playback** — Memory-mapped streaming through PortAudio. No full-file RAM load. Loops seamlessly.
-3. **Device detection** — Polls audio devices every 2 seconds. Headphone unplug, Bluetooth disconnect — playback stops instantly.
-4. **Menu-bar icon** — Template icon; macOS handles dark/light mode automatically.
+On first launch, a 10-minute WAV is synthesized locally for every noise color and binaural combination. Cumulative-sum brown noise through a Butterworth bandpass (1 to 500 Hz, 20 Hz sub-bass highpass), RMS-normalized per chunk, crossfaded at boundaries. Everything is stored in `~/.lowhum/`.
 
-## Requirements
+Playback streams through PortAudio via memory-mapped files, so the full WAV never sits in RAM. The app polls audio devices every 2 seconds and stops instantly if headphones disconnect or a Bluetooth device drops.
 
-- macOS
-- Python >= 3.12
+The menu bar icon is a template image, so macOS handles dark/light mode automatically.
 
 ## License
 
