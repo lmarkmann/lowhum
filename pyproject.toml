@@ -46,4 +46,4 @@ line-length = 80
 ignore_missing_imports = true
 
 [dependency-groups]
-dev = ["mypy>=1.10", "py2app>=0.28", "ruff>=0.9"]
+dev = ["mypy>=1.10", "py2app>=0.28", "pytest>=8.0", "ruff>=0.9"]
