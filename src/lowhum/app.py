@@ -7,7 +7,6 @@ import fcntl
 import os
 import shutil
 import sys
-import threading
 from pathlib import Path
 
 import rumps
@@ -21,8 +20,6 @@ from .generator import (
     NoiseColor,
     audio_file,
     binaural_audio_file,
-    generate_binaural,
-    generate_noise,
 )
 from .icons import ensure_template_icon
 
@@ -302,7 +299,8 @@ class LowHumApp(rumps.App):
         self._noise_color = color
         self._refresh_color_menu()
         self._persist()
-        self._generate_and_play_if_needed(was_playing)
+        if was_playing:
+            self._play_active()
 
     # Binaural beats
 
@@ -330,53 +328,16 @@ class LowHumApp(rumps.App):
         self._binaural_band = band
         self._refresh_binaural_menu()
         self._persist()
-        self._generate_and_play_if_needed(was_playing)
+        if was_playing:
+            self._play_active()
 
-    def _generate_and_play_if_needed(self, was_playing: bool) -> None:
-        path = self._active_audio_file()
-        if not path.exists():
-            if self._binaural_band is not None:
-                label = _BINAURAL_LABELS[self._binaural_band]
-                color = self._noise_color.value
-                msg = f"Generating {label} over {color} noise…"
-            else:
-                msg = f"Generating {self._noise_color.value} noise…"
-            rumps.notification("LowHum", "", msg)
-            threading.Thread(
-                target=self._generate_active_and_resume,
-                args=(
-                    self._noise_color,
-                    self._binaural_band,
-                    was_playing,
-                ),
-                daemon=True,
-            ).start()
-        elif was_playing:
-            self._player.play(path, device=self._selected_device, loop=True)
-            self._play_pause_item.title = "Pause"
-
-    def _generate_active_and_resume(
-        self,
-        color: NoiseColor,
-        band: BrainwaveBand | None,
-        resume: bool,
-    ) -> None:
-        if band is not None:
-            generate_binaural(band, color)
-        else:
-            generate_noise(color)
-        # only resume if the user hasn't switched away
-        if (
-            self._noise_color == color
-            and self._binaural_band == band
-            and resume
-        ):
-            self._player.play(
-                self._active_audio_file(),
-                device=self._selected_device,
-                loop=True,
-            )
-            self._play_pause_item.title = "Pause"
+    def _play_active(self) -> None:
+        self._player.play(
+            self._active_audio_file(),
+            device=self._selected_device,
+            loop=True,
+        )
+        self._play_pause_item.title = "Pause"
 
     # Device management
 
@@ -412,12 +373,7 @@ class LowHumApp(rumps.App):
         self._refresh_devices()
 
         if was_playing:
-            self._player.play(
-                self._active_audio_file(),
-                device=self._selected_device,
-                loop=True,
-            )
-            self._play_pause_item.title = "Pause"
+            self._play_active()
 
     def _check_devices(self, _: rumps.Timer) -> None:
         try:
@@ -459,7 +415,7 @@ class LowHumApp(rumps.App):
             self._player.resume()
             self._play_pause_item.title = "Pause"
         else:
-            self._generate_and_play_if_needed(was_playing=True)
+            self._play_active()
 
     def _on_stop(self, _: rumps.MenuItem) -> None:
         self._player.stop()

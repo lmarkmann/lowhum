@@ -55,9 +55,9 @@ def _default(ctx: typer.Context) -> None:
     # Inside .app bundle or already detached — launch directly.
     if _inside_app_bundle() or os.environ.get(_DETACHED_ENV):
         from .app import LowHumApp
-        from .generator import ensure_audio
+        from .generator import ensure_all_audio
 
-        ensure_audio()
+        ensure_all_audio()
         LowHumApp().run()
         return
 

@@ -105,6 +105,22 @@ def ensure_audio(color: NoiseColor = NoiseColor.BROWN) -> Path:
     return generate_noise(color)
 
 
+def ensure_all_audio() -> None:
+    """Pre-generate every noise + binaural combo that doesn't exist yet."""
+    for color in NoiseColor:
+        path = audio_file(color)
+        if not path.exists():
+            print(f"Generating {color.value} noise …")
+            generate_noise(color)
+
+    for band in BrainwaveBand:
+        for color in NoiseColor:
+            path = binaural_audio_file(band, color)
+            if not path.exists():
+                print(f"Generating {band.value} binaural over {color.value} …")
+                generate_binaural(band, color)
+
+
 class BrainwaveBand(str, Enum):
     """Target brainwave entrainment bands for binaural beats."""
 
