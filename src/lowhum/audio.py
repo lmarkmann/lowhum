@@ -45,7 +45,9 @@ def parse_wav_header(file_path: Path) -> WavInfo:
 
             if chunk_id == b"fmt ":
                 fmt = f.read(min(chunk_size, 16))
-                _audio_fmt, channels, sample_rate = struct.unpack("<HHI", fmt[:8])
+                _audio_fmt, channels, sample_rate = struct.unpack(
+                    "<HHI", fmt[:8]
+                )
                 bits_per_sample = struct.unpack("<H", fmt[14:16])[0]
                 remaining = chunk_size - 16
                 if remaining > 0:
@@ -74,7 +76,11 @@ def parse_wav_header(file_path: Path) -> WavInfo:
 def list_output_devices() -> list[tuple[int, str]]:
     """Return ``[(index, name), ...]`` for every output-capable device."""
     devices = sd.query_devices()
-    return [(i, d["name"]) for i, d in enumerate(devices) if d["max_output_channels"] > 0]
+    return [
+        (i, d["name"])
+        for i, d in enumerate(devices)
+        if d["max_output_channels"] > 0
+    ]
 
 
 def get_default_output_device() -> int:
@@ -96,10 +102,28 @@ class AudioPlayer:
         self._playing = False
         self._lock = threading.Lock()
         self._thread: threading.Thread | None = None
+        self._pos = 0
+        self._paused_pos: int | None = None
+        self._file_path: Path | None = None
+        self._device: int | None = None
+        self._loop = True
+        self._volume: float = 1.0
 
     @property
     def playing(self) -> bool:
         return self._playing
+
+    @property
+    def paused(self) -> bool:
+        return not self._playing and self._paused_pos is not None
+
+    @property
+    def volume(self) -> float:
+        return self._volume
+
+    @volume.setter
+    def volume(self, v: float) -> None:
+        self._volume = max(0.0, min(1.0, v))
 
     # -- public API ---------------------------------------------------------
 
@@ -109,28 +133,45 @@ class AudioPlayer:
         device: int | None = None,
         loop: bool = True,
     ) -> None:
-        """Start streaming *file_path* (non-blocking)."""
+        """Start streaming file_path from the beginning (non-blocking)."""
         self.stop()
+        self._file_path = file_path
+        self._device = device
+        self._loop = loop
+        self._pos = 0
+        self._paused_pos = None
+        self._stop_event.clear()
+        self._thread = threading.Thread(target=self._run, daemon=True)
+        self._thread.start()
+
+    def pause(self) -> None:
+        """Freeze playback at the current position."""
+        self._stop_event.set()
+        with self._lock:
+            if self._stream is not None:
+                with contextlib.suppress(Exception):
+                    self._stream.abort()
+                self._stream = None
+            self._paused_pos = self._pos
+            self._playing = False
+        if self._thread is not None:
+            self._thread.join(timeout=2)
+            self._thread = None
+
+    def resume(self) -> None:
+        """Continue from the paused position."""
+        if self._paused_pos is None or self._file_path is None:
+            return
+        start = self._paused_pos
+        self._paused_pos = None
         self._stop_event.clear()
         self._thread = threading.Thread(
-            target=self._run,
-            args=(file_path, device, loop),
-            daemon=True,
+            target=self._run, args=(start,), daemon=True
         )
         self._thread.start()
 
-    def play_blocking(
-        self,
-        file_path: Path,
-        device: int | None = None,
-        loop: bool = True,
-    ) -> None:
-        """Play audio, blocking until stopped or file ends."""
-        self._stop_event.clear()
-        self._run(file_path, device, loop)
-
     def stop(self) -> None:
-        """Stop playback immediately."""
+        """Stop playback and reset to the beginning."""
         self._stop_event.set()
         with self._lock:
             if self._stream is not None:
@@ -138,18 +179,18 @@ class AudioPlayer:
                     self._stream.abort()
                 self._stream = None
             self._playing = False
+        self._paused_pos = None
         if self._thread is not None:
             self._thread.join(timeout=2)
             self._thread = None
 
     # -- internals ----------------------------------------------------------
 
-    def _run(
-        self,
-        file_path: Path,
-        device: int | None,
-        loop: bool,
-    ) -> None:
+    def _run(self, start_pos: int = 0) -> None:
+        file_path = self._file_path
+        device = self._device
+        loop = self._loop
+
         info = parse_wav_header(file_path)
         n_samples = info.data_size // (info.bits_per_sample // 8)
 
@@ -161,7 +202,7 @@ class AudioPlayer:
             shape=(n_samples,),
         )
 
-        pos = [0]  # mutable for callback closure
+        pos = [start_pos]
         stop_evt = self._stop_event
 
         def _callback(
@@ -172,6 +213,7 @@ class AudioPlayer:
         ) -> None:
             current = pos[0]
             end = current + frames
+            should_stop = False
 
             if end <= n_samples:
                 outdata[:, 0] = data[current:end]
@@ -186,10 +228,17 @@ class AudioPlayer:
                 first = n_samples - current
                 outdata[:first, 0] = data[current:]
                 outdata[first:] = 0
-                raise sd.CallbackStop
+                should_stop = True
 
+            vol = self._volume
+            if vol != 1.0:
+                outdata[:] = (outdata.astype(np.float32) * vol).astype(np.int16)
+
+            self._pos = pos[0]
             if stop_evt.is_set():
                 raise sd.CallbackAbort
+            if should_stop:
+                raise sd.CallbackStop
 
         try:
             stream = sd.OutputStream(
