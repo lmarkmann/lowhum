@@ -24,14 +24,24 @@
 
 Deep brown noise for focus, right from the macOS menu bar. Requires macOS and Python 3.12+.
 
+[**Listen to a 20s preview**](https://github.com/lmarkmann/lowhum/raw/main/assets/preview.mp3) — this is exactly what LowHum sounds like.
+
 Brown noise is one of the most effective focus aids for people with ADHD and anyone who needs to block out distractions. Most options require keeping a YouTube tab open, paying for a subscription, or relying on your phone. LowHum is a single-purpose menu bar app that generates deep brown noise locally and plays it on loop. Install it, click play, forget about it.
 
 ## Install
+
+**pip / uv** (requires Python 3.12+):
 
 ```bash
 uv tool install -U lowhum
 # or
 pip install -U lowhum
+```
+
+**Standalone .app** — download `LowHum.app` from [the latest release](https://github.com/lmarkmann/lowhum/releases/latest). The app is not notarized, so macOS will block it on first launch. To allow it:
+
+```bash
+xattr -cr /Applications/LowHum.app
 ```
 
 ## Usage
