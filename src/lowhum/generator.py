@@ -49,7 +49,9 @@ def _crossfade(chunks: list[np.ndarray]) -> np.ndarray:
     for i in range(1, len(chunks)):
         blend = chunks[i - 1][-xfade:] * fade_out + chunks[i][:xfade] * fade_in
         parts.append(blend)
-        parts.append(chunks[i][xfade:] if i == len(chunks) - 1 else chunks[i][xfade:-xfade])
+        last = i == len(chunks) - 1
+        tail = chunks[i][xfade:] if last else chunks[i][xfade:-xfade]
+        parts.append(tail)
     return np.concatenate(parts)
 
 

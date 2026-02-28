@@ -11,7 +11,6 @@ classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Environment :: MacOS X",
     "Intended Audience :: End Users/Desktop",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: MacOS",
     "Programming Language :: Python :: 3",
     "Topic :: Multimedia :: Sound/Audio",
@@ -43,5 +42,8 @@ exclude = ["*.wav"]
 [tool.ruff]
 line-length = 80
 
+[tool.mypy]
+ignore_missing_imports = true
+
 [dependency-groups]
-dev = ["ruff>=0.9"]
+dev = ["mypy>=1.10", "py2app>=0.28", "ruff>=0.9"]

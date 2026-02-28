@@ -172,6 +172,7 @@ class AudioPlayer:
 
     def _run(self, start_pos: int = 0) -> None:
         file_path = self._file_path
+        assert file_path is not None  # set by play() before _run
         device = self._device
         loop = self._loop
 

@@ -11,6 +11,11 @@ import typer
 
 _DETACHED_ENV = "_LHM_DETACHED"
 
+
+def _inside_app_bundle() -> bool:
+    return ".app/Contents" in (sys.executable or "")
+
+
 app = typer.Typer(
     name="lowhum",
     help="LowHum — deep brown noise for focus.",
@@ -47,8 +52,8 @@ def _default(ctx: typer.Context) -> None:
     if ctx.invoked_subcommand is not None:
         return
 
-    # Already running as the detached background process — just launch the app.
-    if os.environ.get(_DETACHED_ENV):
+    # Inside .app bundle or already detached — launch directly.
+    if _inside_app_bundle() or os.environ.get(_DETACHED_ENV):
         from .app import LowHumApp
         from .generator import ensure_audio
 
@@ -109,3 +114,7 @@ def generate(
 
     generate_noise(noise_color, duration=duration)
     typer.echo(f"  Saved to {path}")
+
+
+if __name__ == "__main__":
+    app()
