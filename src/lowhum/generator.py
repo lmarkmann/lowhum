@@ -35,6 +35,24 @@ def _raw_noise(color: NoiseColor, n: int) -> np.ndarray:
         return np.cumsum(white)
 
 
+def _crossfade(chunks: list[np.ndarray]) -> np.ndarray:
+    """Overlap-add crossfade across chunk boundaries (1 s)."""
+    if len(chunks) == 1:
+        return chunks[0]
+    xfade = SAMPLE_RATE
+    fade_out = np.linspace(1, 0, xfade)
+    fade_in = np.linspace(0, 1, xfade)
+    if chunks[0].ndim == 2:
+        fade_out = fade_out[:, np.newaxis]
+        fade_in = fade_in[:, np.newaxis]
+    parts: list[np.ndarray] = [chunks[0][:-xfade]]
+    for i in range(1, len(chunks)):
+        blend = chunks[i - 1][-xfade:] * fade_out + chunks[i][:xfade] * fade_in
+        parts.append(blend)
+        parts.append(chunks[i][xfade:] if i == len(chunks) - 1 else chunks[i][xfade:-xfade])
+    return np.concatenate(parts)
+
+
 def generate_noise(
     color: NoiseColor = NoiseColor.BROWN,
     output_path: Path | None = None,
@@ -70,17 +88,7 @@ def generate_noise(
         chunk = np.clip(chunk, -1.0, 1.0)
         chunks.append(chunk)
 
-    # Crossfade between chunks (1 s) to eliminate boundary clicks
-    xfade = SAMPLE_RATE
-    for i in range(1, len(chunks)):
-        fade_out = np.linspace(1, 0, xfade)
-        fade_in = np.linspace(0, 1, xfade)
-        chunks[i - 1][-xfade:] *= fade_out
-        chunks[i][:xfade] *= fade_in
-        chunks[i][:xfade] += chunks[i - 1][-xfade:]
-        chunks[i - 1] = chunks[i - 1][:-xfade]
-
-    final = np.concatenate(chunks)[: duration * SAMPLE_RATE]
+    final = _crossfade(chunks)[: duration * SAMPLE_RATE]
     audio_data = (final * 32_767).astype(np.int16)
     wav_write(str(output_path), SAMPLE_RATE, audio_data)
     return output_path
@@ -196,17 +204,7 @@ def generate_binaural(
         stereo = np.clip(stereo, -1.0, 1.0)
         chunks.append(stereo)
 
-    # Crossfade between chunks (1 s) — same technique as mono
-    xfade = SAMPLE_RATE
-    for i in range(1, len(chunks)):
-        fade_out = np.linspace(1, 0, xfade)[:, np.newaxis]
-        fade_in = np.linspace(0, 1, xfade)[:, np.newaxis]
-        chunks[i - 1][-xfade:] *= fade_out
-        chunks[i][:xfade] *= fade_in
-        chunks[i][:xfade] += chunks[i - 1][-xfade:]
-        chunks[i - 1] = chunks[i - 1][:-xfade]
-
-    final = np.concatenate(chunks)[: duration * SAMPLE_RATE]
+    final = _crossfade(chunks)[: duration * SAMPLE_RATE]
     audio_data = (final * 32_767).astype(np.int16)
     wav_write(str(output_path), SAMPLE_RATE, audio_data)
     return output_path
