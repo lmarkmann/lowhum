@@ -105,7 +105,6 @@ def _set_dock_icon() -> None:
 
 
 class LowHumApp(rumps.App):
-    """Menu-bar app: play / pause / stop / noise color / volume / device."""
 
     def __init__(self) -> None:
         icon_path = str(ensure_template_icon())
@@ -117,7 +116,6 @@ class LowHumApp(rumps.App):
         self._player = AudioPlayer()
         self._known_device_names: set[str] = set()
 
-        # Load persisted config
         cfg = _load_config()
         raw_device = cfg.get("device")
         self._selected_device: int | None = (
@@ -130,7 +128,6 @@ class LowHumApp(rumps.App):
         self._volume: float = float(cfg.get("volume", 1.0))
         self._player.volume = self._volume
 
-        # Build static menu items
         self._play_pause_item = rumps.MenuItem(
             "Play", callback=self._on_play_pause
         )

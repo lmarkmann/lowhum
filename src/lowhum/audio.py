@@ -11,9 +11,7 @@ from pathlib import Path
 import numpy as np
 import sounddevice as sd
 
-# ---------------------------------------------------------------------------
 # WAV header parsing (avoids loading the full file into memory)
-# ---------------------------------------------------------------------------
 
 
 @dataclass(frozen=True, slots=True)
@@ -68,11 +66,6 @@ def parse_wav_header(file_path: Path) -> WavInfo:
     )
 
 
-# ---------------------------------------------------------------------------
-# Device helpers
-# ---------------------------------------------------------------------------
-
-
 def list_output_devices() -> list[tuple[int, str]]:
     """Return ``[(index, name), ...]`` for every output-capable device."""
     devices = sd.query_devices()
@@ -86,11 +79,6 @@ def list_output_devices() -> list[tuple[int, str]]:
 def get_default_output_device() -> int:
     """Index of the current default output device."""
     return sd.default.device[1]  # type: ignore[index]
-
-
-# ---------------------------------------------------------------------------
-# Player
-# ---------------------------------------------------------------------------
 
 
 class AudioPlayer:
@@ -124,8 +112,6 @@ class AudioPlayer:
     @volume.setter
     def volume(self, v: float) -> None:
         self._volume = max(0.0, min(1.0, v))
-
-    # -- public API ---------------------------------------------------------
 
     def play(
         self,
@@ -184,26 +170,34 @@ class AudioPlayer:
             self._thread.join(timeout=2)
             self._thread = None
 
-    # -- internals ----------------------------------------------------------
-
     def _run(self, start_pos: int = 0) -> None:
         file_path = self._file_path
         device = self._device
         loop = self._loop
 
         info = parse_wav_header(file_path)
-        n_samples = info.data_size // (info.bits_per_sample // 8)
+        n_frames = info.data_size // (info.channels * info.bits_per_sample // 8)
 
-        data = np.memmap(
-            file_path,
-            dtype=np.int16,
-            mode="r",
-            offset=info.data_offset,
-            shape=(n_samples,),
-        )
+        if info.channels == 1:
+            data = np.memmap(
+                file_path,
+                dtype=np.int16,
+                mode="r",
+                offset=info.data_offset,
+                shape=(n_frames,),
+            )
+        else:
+            data = np.memmap(
+                file_path,
+                dtype=np.int16,
+                mode="r",
+                offset=info.data_offset,
+                shape=(n_frames, info.channels),
+            )
 
         pos = [start_pos]
         stop_evt = self._stop_event
+        mono = info.channels == 1
 
         def _callback(
             outdata: np.ndarray,
@@ -215,20 +209,36 @@ class AudioPlayer:
             end = current + frames
             should_stop = False
 
-            if end <= n_samples:
-                outdata[:, 0] = data[current:end]
-                pos[0] = end
-            elif loop:
-                first = n_samples - current
-                outdata[:first, 0] = data[current:]
-                remaining = frames - first
-                outdata[first:, 0] = data[:remaining]
-                pos[0] = remaining
+            if mono:
+                if end <= n_frames:
+                    outdata[:, 0] = data[current:end]
+                    pos[0] = end
+                elif loop:
+                    first = n_frames - current
+                    outdata[:first, 0] = data[current:]
+                    remaining = frames - first
+                    outdata[first:, 0] = data[:remaining]
+                    pos[0] = remaining
+                else:
+                    first = n_frames - current
+                    outdata[:first, 0] = data[current:]
+                    outdata[first:] = 0
+                    should_stop = True
             else:
-                first = n_samples - current
-                outdata[:first, 0] = data[current:]
-                outdata[first:] = 0
-                should_stop = True
+                if end <= n_frames:
+                    outdata[:] = data[current:end]
+                    pos[0] = end
+                elif loop:
+                    first = n_frames - current
+                    outdata[:first] = data[current:]
+                    remaining = frames - first
+                    outdata[first:] = data[:remaining]
+                    pos[0] = remaining
+                else:
+                    first = n_frames - current
+                    outdata[:first] = data[current:]
+                    outdata[first:] = 0
+                    should_stop = True
 
             vol = self._volume
             if vol != 1.0:
