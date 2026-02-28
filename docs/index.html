@@ -17,13 +17,13 @@
     --ok: #5a8a5a;
   }
   .light {
-    --bg: #f5f3ef;
-    --fg: #1a1a1a;
-    --mute: #8a8a8a;
-    --accent: #8a7542;
-    --card: #e8e5df;
-    --border: #d0cdc6;
-    --ok: #3d7a3d;
+    --bg: #ede8d8;
+    --fg: #2a2418;
+    --mute: #8a7e6a;
+    --accent: #6b5c3a;
+    --card: #ddd6c2;
+    --border: #c8c0aa;
+    --ok: #4a7a3a;
   }
 
   body {
@@ -171,12 +171,26 @@ function copy(id, btn) {
   }, 1500);
 }
 
-function toggleTheme() {
-  document.body.classList.toggle('light');
-  var light = document.body.classList.contains('light');
+function applyTheme(light) {
+  document.body.classList.toggle('light', light);
   document.getElementById('icon-sun').style.display = light ? 'none' : 'block';
   document.getElementById('icon-moon').style.display = light ? 'block' : 'none';
 }
+
+function toggleTheme() {
+  var light = !document.body.classList.contains('light');
+  applyTheme(light);
+  localStorage.setItem('theme', light ? 'light' : 'dark');
+}
+
+(function() {
+  var saved = localStorage.getItem('theme');
+  if (saved) {
+    applyTheme(saved === 'light');
+  } else if (window.matchMedia('(prefers-color-scheme: light)').matches) {
+    applyTheme(true);
+  }
+})()
 </script>
 
 </body>
