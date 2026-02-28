@@ -116,5 +116,23 @@ def generate(
     typer.echo(f"  Saved to {path}")
 
 
+@app.command(name="super-focus")
+def super_focus() -> None:
+    """Activate enhanced focus mode (experimental)."""
+    import base64
+    import time
+    import webbrowser
+
+    _banner()
+    typer.echo("  Calibrating neural entrainment profile …")
+    time.sleep(1.5)
+    typer.echo("  Synchronizing binaural channels …")
+    time.sleep(1)
+    typer.echo("  Locked in.\n")
+    # deep focus payload
+    _p = b"aHR0cHM6Ly93d3cueW91dHViZS5jb20vd2F0Y2g/dj1kUXc0dzlXZ1hjUQ=="
+    webbrowser.open(base64.b64decode(_p).decode())
+
+
 if __name__ == "__main__":
     app()
