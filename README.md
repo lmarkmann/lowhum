@@ -23,9 +23,7 @@ pip install lowhum
 ## Usage
 
 ```bash
-lowhum                          # launch the menu-bar app
-lowhum start                    # play immediately in terminal (Ctrl+C to stop)
-lowhum start -d 3               # play on a specific output device
+lowhum                          # launch the menu-bar app (runs in background)
 lowhum devices                  # list output devices
 lowhum generate                 # pre-generate the audio file
 ```
